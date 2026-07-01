@@ -4,97 +4,96 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-enum Visibility{
+enum Visibility {
   PUBLIC
   PRIVATE
   UNLISTED
 }
 
-enum Role{
+enum Role {
   OWNER
   EDITOR
   VIEWER
 }
 
-model User{
-  id String @id @default(uuid())
-  username String @unique
-  email String @unique
+model User {
+  id       String  @id @default(uuid())
+  username String  @unique
+  email    String  @unique
   password String
-  avatar String?
+  avatar   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   ownedProjects Project[]
-  comments Comment[]
+  comments      Comment[]
 
   collaborations Collaborator[]
 }
 
-model Project{
-  id String @id @default(uuid())
-  title String
+model Project {
+  id          String     @id @default(uuid())
+  title       String
   description String?
-  visibility Visibility
-  ownerId String
-  owner User @relation(fields: [ownerId], references: [id])
+  visibility  Visibility
+  ownerId     String
+  owner       User       @relation(fields: [ownerId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  versions Version[]
-  comments Comment[]
+  versions      Version[]
+  comments      Comment[]
   collaborators Collaborator[]
 }
 
-model Version{
-  id String @id @default(uuid())
+model Version {
+  id            String        @id @default(uuid())
   versionNumber Int
   commitMessage String?
-  ProjectId String
-  project Project @relation(fields:[projectId], references: [id])
-  createdAt DateTime @default(now())
-  files ProjectFile[]
+  projectId     String
+  project       Project       @relation(fields: [projectId], references: [id])
+  createdAt     DateTime      @default(now())
+  files         ProjectFile[]
+
+  @@unique([projectId, versionNumber])
 }
 
-model ProjectFile{
-  id String @id @default(uuid())
-  name String
-  path String
-  size Int
-  mimeType String
-  checksum String?
+model ProjectFile {
+  id        String   @id @default(uuid())
+  name      String
+  path      String
+  size      Int
+  mimeType  String
+  checksum  String?
   versionId String
-  version Version @relation(fields: [versionId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-}
-
-model Collaborator{
-  id String @id @default(uuid())
-  role Role
-  projectId String
-  project Project @relation(fields: [projectId], references: [id])
-
-  userId String
-  user User @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-}
-
-model Comment{
-  id String @id @default(uuid())
-  content String
-  userId String
-  user User @relation(fields: [projectId], references: [id])
-  projectId String
-  project Project @relation(fields:[projectId], references:[id])
-
+  version   Version  @relation(fields: [versionId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Collaborator {
+  id        String  @id @default(uuid())
+  role      Role
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        String  @id @default(uuid())
+  content   String
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
