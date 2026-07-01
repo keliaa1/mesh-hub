@@ -50,3 +50,51 @@ model Project{
   comments Comment[]
   collaborators Collaborator[]
 }
+
+model Version{
+  id String @id @default(uuid())
+  versionNumber Int
+  commitMessage String?
+  ProjectId String
+  project Project @relation(fields:[projectId], references: [id])
+  createdAt DateTime @default(now())
+  files ProjectFile[]
+}
+
+model ProjectFile{
+  id String @id @default(uuid())
+  name String
+  path String
+  size Int
+  mimeType String
+  checksum String?
+  versionId String
+  version Version @relation(fields: [versionId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+model Collaborator{
+  id String @id @default(uuid())
+  role Role
+  projectId String
+  project Project @relation(fields: [projectId], references: [id])
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Comment{
+  id String @id @default(uuid())
+  content String
+  userId String
+  user User @relation(fields: [projectId], references: [id])
+  projectId String
+  project Project @relation(fields:[projectId], references:[id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
