@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from "@nestjs/common";
 import {PrismaService} from'../prisma/prisma.service';
 import {VersionService} from '../versions/versions.service';
 
@@ -14,6 +14,9 @@ export class FilesService{
         file: Express.Multer.File,
         userId: string,
     ) {
+        if (!file) {
+            throw new BadRequestException('File is required');
+        }
         const version = await this.prisma.version.findUnique({
             where: {
                 id: versionId,
