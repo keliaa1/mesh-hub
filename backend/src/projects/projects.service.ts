@@ -105,4 +105,15 @@ export class ProjectsService {
         await this.prisma.project.delete({ where: { id } });
         return { message: 'Project successfully deleted' };
     }
+
+    async findById(projectId: string){
+        return this.prisma.project.findUnique({
+            where:{
+                id:projectId,
+            },
+            include: {
+                owner: true,
+            }
+        })
+    }
 }
