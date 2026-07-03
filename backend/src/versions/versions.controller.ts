@@ -1,8 +1,9 @@
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { VersionService } from "./versions.service";
-import { Controller, UseGuards, Post, Body, Param } from "@nestjs/common";
-import { CurrentUserType } from "src/auth/types/current-user.type";
-
+import { Controller, UseGuards, Post, Body, Param, Delete, Get } from "@nestjs/common";
+import type { CurrentUserType } from "src/auth/types/current-user.type";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
+import { CreateVersionDto } from "./dto/create-version.dto";
 @Controller('projects/:projectId/versions')
 export class VersionsController{
     constructor (
@@ -14,7 +15,7 @@ export class VersionsController{
     create(
         @Param('projectId') projectId: string,
         @Body() dto: CreateVersionDto,
-        @CurrentUser() user: CurrentUserType
+        @CurrentUser() user: CurrentUserType,
     ){
         return this.versionService.create(
             projectId,
@@ -40,7 +41,7 @@ export class VersionsController{
     @UseGuards(JwtAuthGuard)
     remove(
         @Param('id') id:string,
-        @CurrentUser() user:CurrentUser,
+        @CurrentUser() user:CurrentUserType,
     ){
         return this.versionService.remove(
             id,
