@@ -272,7 +272,7 @@ export default function VersionPage() {
                       </div>
                     ) : blobUrl ? (
                       <div className="absolute inset-0">
-                        <ModelViewer url={blobUrl} />
+                        <ModelViewer url={blobUrl} fileName={selectedFile?.name} />
                       </div>
                     ) : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8e8e8e]">
