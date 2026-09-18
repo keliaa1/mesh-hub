@@ -1,8 +1,10 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+generator client {
+  provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"
+}
 
 enum Visibility {
   PUBLIC
@@ -10,7 +12,7 @@ enum Visibility {
   UNLISTED
 }
 
-enum Role {
+enum CollaboratorRole {
   OWNER
   EDITOR
   VIEWER
@@ -26,9 +28,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ownedProjects Project[]
-  comments      Comment[]
-
+  ownedProjects  Project[]
+  comments       Comment[]
   collaborations Collaborator[]
 }
 
@@ -53,9 +54,11 @@ model Version {
   versionNumber Int
   commitMessage String?
   projectId     String
-  project       Project       @relation(fields: [projectId], references: [id])
+  project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   files         ProjectFile[]
+  comments      Comment[]
 
   @@unique([projectId, versionNumber])
 }
@@ -68,29 +71,33 @@ model ProjectFile {
   mimeType  String
   checksum  String?
   versionId String
-  version   Version  @relation(fields: [versionId], references: [id])
+  version   Version  @relation(fields: [versionId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Collaborator {
-  id        String  @id @default(uuid())
-  role      Role
+  id        String @id @default(uuid())
   projectId String
-  project   Project @relation(fields: [projectId], references: [id])
-
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  role      CollaboratorRole
+  invitedAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
 }
 
 model Comment {
   id        String  @id @default(uuid())
   content   String
   userId    String
-  user      User    @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectId String
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versionId String?
+  version   Version? @relation(fields: [versionId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

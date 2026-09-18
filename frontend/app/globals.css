@@ -1,26 +1,181 @@
 @import "tailwindcss";
 
+/*
+ * MeshHub dark theme.
+ *
+ * The whole product (marketing site, auth, dashboard) shares one
+ * monochrome, pill-driven visual language. `.btn-dark` is the primary/
+ * high-emphasis action (rendered light against the dark UI) and
+ * `.btn-light` is the secondary/muted action (rendered as a dark pill) —
+ * the names describe emphasis, not literal color, and are kept as-is so
+ * every existing call site keeps working.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #000000;
+  --surface: #0b0b0c;
+  --surface-2: #141416;
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #ffffff;
+  --muted: #8e8e8e;
+  --pill-dark: #28282a;
+  --pill-dark-hover: #323234;
+  --sign-in-text: #c8c8c8;
+  --danger: #ff6b81;
+  --danger-soft: rgba(255, 107, 129, 0.14);
+  --nav-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  --trust-bg: #28282a;
+  --trust-border: rgba(255, 255, 255, 0.4);
+  --trust-text: #c4c2c3;
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: "BubbledotICG-FinePos", "Geist Pixel Circle", monospace;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-muted: var(--muted);
+  --color-card: var(--surface);
+  --color-line: var(--border);
+  --font-sans: var(--font-inter), var(--font-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@font-face {
+  font-family: "Geist Pixel Circle";
+  src: url("/fonts/GeistPixel-Circle.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+* {
+  cursor: default;
+}
+
+a, button, label[for], [role="button"], input[type="submit"], .cursor-pointer {
+  cursor: pointer;
+}
+
+/* ---------- Shared UI Component Classes ---------- */
+
+.btn-dark {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition-all duration-200 hover:-translate-y-px active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 22px rgba(255, 255, 255, 0.22);
+}
+.btn-dark:hover {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 30px rgba(255, 255, 255, 0.34);
+}
+
+.btn-light {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-[#28282a] px-5 py-2.5 text-sm font-semibold text-[#c8c8c8] transition-all duration-200 hover:bg-[#323234] hover:text-white active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer;
+}
+
+.btn-pink {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-[#ff6b81] px-5 py-2.5 text-sm font-semibold text-black transition-all duration-200 hover:bg-[#ff8595] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm;
+}
+
+.btn-icon-dark {
+  @apply flex h-9 w-9 items-center justify-center rounded-full bg-white text-black transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer;
+}
+
+.btn-icon-light {
+  @apply flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#28282a] text-[#c8c8c8] transition-all duration-200 hover:bg-[#323234] hover:text-white active:scale-95 cursor-pointer;
+}
+
+.input {
+  @apply w-full rounded-2xl border border-white/10 bg-[#141416] px-4 py-2.5 text-sm font-medium text-white placeholder-[#6f6f6f] focus:border-white/30 focus:outline-none focus:ring-2 focus:ring-white/10 transition-colors;
+}
+
+.card {
+  @apply rounded-3xl border border-white/10 bg-[#0b0b0c] shadow-sm;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold tracking-tight;
+}
+
+.chip-dashed {
+  @apply inline-flex items-center gap-1 rounded-full border border-dashed border-white/15 px-2.5 py-0.5 text-[11px] font-medium text-[#8e8e8e] hover:border-white/40 hover:text-white transition-colors;
+}
+
+.section-label {
+  @apply text-[10px] font-bold uppercase tracking-widest text-[#8e8e8e];
+}
+
+/* Custom Scrollbars */
+.scroll-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: #333335; border-radius: 999px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- Shared entrance animations (landing, auth, dashboard) ---------- */
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes revealPulse {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+    filter: blur(6px);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1.02);
+    filter: blur(0);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes headlineFade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim {
+  opacity: 0;
+  animation: reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim, .anim-pulse, .headline span {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
 }

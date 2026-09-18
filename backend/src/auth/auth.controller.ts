@@ -21,11 +21,4 @@ export class AuthController{
         return this.authservice.login(loginDto);
     }
 
-    @Get('profile')
-    @UseGuards(JwtAuthGuard)
-profile(@CurrentUser() user: CurrentUserType) {
-  return {
-    message: 'You are authenticated!',
-  };
-}
 }

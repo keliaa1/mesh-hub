@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -15,19 +15,41 @@ export class AuthService {
   ) {}
   async register(registerDto: RegisterDto) {
     const { username, email, password } = registerDto;
-    const existingUser = await this.usersService.findByEmail(email);
-    if (existingUser) {
+    const existingEmail = await this.usersService.findByEmail(email);
+    if (existingEmail) {
       throw new BadRequestException('Email already exists');
+    }
+    const existingUsername = await this.usersService.findByUsername(username);
+    if (existingUsername) {
+      throw new BadRequestException('Username already exists');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await this.usersService.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
-    const { password: _, ...safeUser } = user;
-    return safeUser;
+    try {
+      const user = await this.usersService.create({
+        username,
+        email,
+        password: hashedPassword,
+      });
+      const { password: _, ...safeUser } = user;
+      return safeUser;
+    } catch (err) {
+      // Defensive: covers the race where the pre-check passes but the insert
+      // still violates the unique constraints (username or email).
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        const target = (err.meta?.target as string[]) ?? [];
+        if (target.includes('username')) {
+          throw new BadRequestException('Username already exists');
+        }
+        if (target.includes('email')) {
+          throw new BadRequestException('Email already exists');
+        }
+      }
+      throw err;
+    }
   }
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;

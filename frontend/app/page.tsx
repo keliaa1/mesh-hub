@@ -1,65 +1,228 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import Logo from "@/components/Logo";
+import styles from "./page.module.css";
+
+const NAV_LINKS = [
+  { label: "Home", href: "/", active: true },
+  { label: "Product", href: "#" },
+  { label: "Blender Add-on", href: "#" },
+  { label: "Contact", href: "#" },
+];
+
+const STATS = [
+  { icon: "<", target: 50, suffix: "ms", decimals: 0, label: "Push Sync Time" },
+  { icon: "%", target: 99.99, suffix: "%", decimals: 2, label: "Checksum Integrity" },
+  { icon: "*", target: 24, suffix: "/7", decimals: 0, label: "Version History" },
+  { icon: "#", target: 9, suffix: "+", decimals: 0, label: "3D Formats Supported" },
+];
+
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function useCountUp() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [values, setValues] = useState<number[]>(STATS.map(() => 0));
+  const started = useRef(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !started.current) {
+            started.current = true;
+            STATS.forEach((stat, i) => {
+              const startOffset = 480 + i * 90;
+              const duration = 1500 + i * 80;
+              window.setTimeout(() => {
+                const startTime = performance.now();
+                const tick = (now: number) => {
+                  const progress = Math.min(1, (now - startTime) / duration);
+                  const eased = easeOutCubic(progress);
+                  setValues((prev) => {
+                    const next = [...prev];
+                    next[i] = stat.target * eased;
+                    return next;
+                  });
+                  if (progress < 1) requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+              }, startOffset);
+            });
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.25 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { containerRef, values };
+}
+
+export default function LandingPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { containerRef, values } = useCountUp();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    const onResize = () => {
+      if (window.innerWidth > 720) setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onResize);
+    document.body.classList.toggle("menu-open", menuOpen);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onResize);
+      document.body.classList.remove("menu-open");
+    };
+  }, [menuOpen]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <div className={styles.page}>
+      <div className={styles.bg}>
+        <video className={styles.bgVideo} autoPlay muted loop playsInline>
+          <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4"
+            type="video/mp4"
+          />
+        </video>
+        <div className={styles.bgFade} />
+      </div>
+
+      {/* Header */}
+      <header className={styles.header}>
+        <Link href="/" className={styles.logoBtn} aria-label="MeshHub">
+          <Logo size={26} />
+        </Link>
+
+        <nav className={styles.navPill} aria-label="Primary">
+          {NAV_LINKS.map((link) => (
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              key={link.label}
+              href={link.href}
+              className={`${styles.navLink} ${link.active ? styles.navLinkActive : ""}`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <Link href="/auth/login" className={styles.signIn}>
+          Sign in
+        </Link>
+
+        <button
+          type="button"
+          className={styles.burger}
+          data-open={menuOpen}
+          aria-expanded={menuOpen}
+          aria-label="Toggle menu"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span className={styles.burgerBar} />
+          <span className={styles.burgerBar} />
+          <span className={styles.burgerBar} />
+        </button>
+      </header>
+
+      {menuOpen && (
+        <>
+          <div className={styles.overlay} onClick={() => setMenuOpen(false)} />
+          <div className={styles.sheet} role="menu">
+            {NAV_LINKS.map((link, i) => (
+              <a
+                key={link.label}
+                href={link.href}
+                role="menuitem"
+                className={`${styles.sheetLink} ${link.active ? styles.sheetLinkActive : ""}`}
+                style={{ animationDelay: `${0.05 + i * 0.05}s` }}
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
+              </a>
+            ))}
+            <Link
+              href="/auth/login"
+              className={styles.sheetSignIn}
+              style={{ animationDelay: `${0.05 + NAV_LINKS.length * 0.05}s` }}
+              onClick={() => setMenuOpen(false)}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Sign in
+            </Link>
+          </div>
+        </>
+      )}
+
+      {/* Hero */}
+      <main className={styles.hero}>
+        <div className={`${styles.trustRow} ${styles.anim}`} style={{ "--d": "0.05s" } as React.CSSProperties}>
+          <div className={styles.avatarRing}>
+            <div className={styles.avatarInner}>
+              <i className="fa-solid fa-cube" />
+            </div>
+          </div>
+          <div className={styles.avatarRing}>
+            <div className={styles.avatarInner}>
+              <i className="fa-solid fa-layer-group" />
+            </div>
+          </div>
+          <div className={styles.avatarRing}>
+            <div className={styles.avatarInner}>
+              <i className="fa-brands fa-github" />
+            </div>
+          </div>
+          <div className={styles.trustPill}>Built for studios &amp; solo creators</div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        <h1 className={styles.headline}>
+          <span className={styles.headlineLine}>Version Control</span>
+          <span className={styles.headlineLine}>Designed For 3D</span>
+        </h1>
+
+        <p className={`${styles.subhead} ${styles.anim}`} style={{ "--d": "0.28s" } as React.CSSProperties}>
+          Push, track and restore every Blender project with a modular
+          version control platform built for creative production.
+        </p>
+
+        <Link
+          href="/auth/register"
+          className={`${styles.cta} ${styles.animPulse}`}
+          style={{ "--d": "0.4s" } as React.CSSProperties}
+        >
+          Get Started
+        </Link>
       </main>
+
+      {/* Stats footer */}
+      <div className={styles.stats} ref={containerRef}>
+        {STATS.map((stat, i) => (
+          <div
+            key={stat.label}
+            className={`${styles.statItem} ${styles.anim}`}
+            style={{ "--d": `${0.5 + i * 0.08}s` } as React.CSSProperties}
+          >
+            <span className={styles.statIcon}>{stat.icon}</span>
+            <span className={styles.statValue}>
+              {values[i].toFixed(stat.decimals)}
+              {stat.suffix}
+            </span>
+            <span className={styles.statLabel}>{stat.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
